@@ -1,0 +1,109 @@
+training:
+  batch_size: 8
+  epochs: 100
+  accum_iter: 1
+  seed: 1
+  num_workers: 8
+  pin_mem: true
+  start_epoch: 0
+  num_iterations: null
+loss:
+  module: loss.classification.cross_entropy
+  weight: false
+model:
+  module: models.model_vit
+  name: dinov3_huge_plus
+  input_size:
+  - 448
+  - 448
+  drop_rate: 0.0
+  drop_path_rate: 0.1
+  enable_fulltune: false
+  enable_lora: true
+  pretrained_ckpt: null
+  enable_last_vit: false
+  lora:
+    rank: 32
+    alpha: 64
+    dropout: 0.1
+    bias: lora_only
+  last_vit:
+    top_k: 196
+    sigma: 10.0
+    eps: 1.0e-06
+    score_variant: code
+optimizer:
+  lr: null
+  blr: 0.001
+  weight_decay: 0.05
+  layer_decay: 0.75
+  min_lr: 1.0e-06
+  warmup_epochs: 10
+  clip_grad: null
+  use_llrd: false
+  scheduler: cosine
+dataset:
+  module: datasets.classification.dataset_single_eye
+  csv_path: data_ted/get_single_eye/data_single_eye.csv
+  image_path: /data_B/xujialiu/datasets/ted/
+  keypoint_x_col: keypoint_x
+  keypoint_y_col: keypoint_y
+  name_col: relative_path
+  split_col: fold
+  split_values:
+    train:
+    - 1
+    - 2
+    - 3
+    - 4
+    - 5
+    - 6
+    - 7
+    val:
+    - 0
+    test:
+    - 8
+    - 9
+  nb_classes: 3
+  target_cols: label
+  train_all: false
+  use_weighted_sampler: true
+augmentation:
+  module: augmentations.augmentation_single_eye
+  image_size:
+  - 448
+  - 448
+  mean:
+  - 0.485
+  - 0.456
+  - 0.406
+  std:
+  - 0.229
+  - 0.224
+  - 0.225
+  crop_padding_ratio: 0.0001
+  rotate_limit: 15
+  val_crop_ratio: 0.25
+  crop_aspect_ratio:
+  - 0.8
+  - 1.2
+  keypoint_jitter_std: 1.0
+paths:
+  checkpoint_dir: checkpoints
+  log_dir: log
+  val_dir: val
+  test_dir: test
+  result_root_path: projects/ted_classification
+  result_name: dinov3_huge_448x896_lora_r8a16_d01_dp01_f1_aug_v3_single_weighted-sampler_4
+  ckpt_path: null
+early_stopping:
+  patience: 0
+  monitor_metrics: val_loss
+  monitor_mode: min
+checkpoint:
+  save_best_ckpt: 30
+  save_epoch_ckpt: 0
+  monitor_metrics: val_f1_macro
+  monitor_mode: max
+eval: false
+device: cuda:0

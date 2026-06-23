@@ -1,0 +1,2 @@
+python data_ted/codes/save_val_test_augmented_reader_study_double.py -c configs/ted_classification/config_reader_study_double.yaml
+python data_ted/codes/save_val_test_augmented_reader_study_single.py -c configs/ted_classification/config_reader_study_single.yaml

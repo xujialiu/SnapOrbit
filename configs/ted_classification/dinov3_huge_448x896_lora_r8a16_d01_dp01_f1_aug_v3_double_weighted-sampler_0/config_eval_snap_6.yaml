@@ -1,0 +1,125 @@
+training:
+  batch_size: 16
+  epochs: 100
+  accum_iter: 1
+  seed: 1
+  num_workers: 8
+  pin_mem: true
+  start_epoch: 0
+  num_iterations: null
+loss:
+  module: loss.classification.cross_entropy
+  weight: false
+model:
+  module: models.model_vit
+  name: dinov3_huge_plus
+  input_size:
+  - 448
+  - 896
+  drop_rate: 0.0
+  drop_path_rate: 0.1
+  enable_fulltune: false
+  enable_lora: true
+  pretrained_ckpt: null
+  enable_last_vit: false
+  lora:
+    rank: 8
+    alpha: 16
+    dropout: 0.1
+    bias: lora_only
+  last_vit:
+    top_k: 196
+    sigma: 10.0
+    eps: 1.0e-06
+    score_variant: code
+optimizer:
+  lr: null
+  blr: 0.001
+  weight_decay: 0.05
+  layer_decay: 0.75
+  min_lr: 1.0e-06
+  warmup_epochs: 10
+  clip_grad: null
+  use_llrd: false
+  scheduler: cosine
+dataset:
+  module: datasets.classification.dataset_with_keypoints
+  csv_path: /data_B/xujialiu/projects/super-resolution-classification/projects/ted_classification/data_splited.csv
+  image_path: /data_B/xujialiu/datasets/ted/
+  keypoint_x_col: keypoint_x
+  keypoint_y_col: keypoint_y
+  name_col: relative_path
+  split_col: fold
+  split_values:
+    train:
+    - 2
+    - 3
+    - 4
+    - 5
+    - 6
+    - 7
+    - 8
+    val:
+    - 9
+    test:
+    - 0
+    - 1
+  nb_classes: 3
+  target_cols: label
+  train_all: false
+  use_weighted_sampler: true
+augmentation:
+  module: augmentations.augmentation_with_keypoints
+  image_size:
+  - 448
+  - 896
+  mean:
+  - 0.485
+  - 0.456
+  - 0.406
+  std:
+  - 0.229
+  - 0.224
+  - 0.225
+  crop_padding_ratio: 0.0001
+  rotate_limit: 15
+  val_crop_ratio: 0.05
+  crop_aspect_ratio:
+  - 0.8
+  - 1.2
+  keypoint_jitter_std: 1.0
+paths:
+  checkpoint_dir: checkpoints
+  uncertainty: uncertainty_snap_6
+  log_dir: log
+  val_dir: val
+  test_dir: test
+  result_root_path: projects/ted_classification
+  result_name: dinov3_huge_448x896_lora_r8a16_d01_dp01_f1_aug_v3_double_weighted-sampler_0
+  ckpt_path: projects/ted_classification/dinov3_huge_448x896_lora_r8a16_d01_dp01_f1_aug_v3_double_weighted-sampler_0/checkpoints/checkpoint_best_58.pth
+early_stopping:
+  patience: 0
+  monitor_metrics: val_loss
+  monitor_mode: min
+checkpoint:
+  save_best_ckpt: 30
+  save_epoch_ckpt: 0
+  monitor_metrics: val_f1_macro
+  monitor_mode: max
+eval: true
+device: cuda:0
+
+uncertainty:
+  method: snapshot_ensemble                 # mc_dropout | snapshot_ensemble
+  metric: predictive_entropy         # predictive_entropy | mutual_information | variance
+  other_params:
+    num_estimators: 30               # mc_dropout: T forward passes
+    last_layer: false                # mc_dropout: only enable dropout on last module
+    on_batch: true                   # mc_dropout: repeat batch vs. for-loop
+    checkpoint_paths:
+      - projects/ted_classification/dinov3_huge_448x896_lora_r8a16_d01_dp01_f1_aug_v3_double_weighted-sampler_0/checkpoints/checkpoint_best_58.pth
+      - projects/ted_classification/dinov3_huge_448x896_lora_r8a16_d01_dp01_f1_aug_v3_double_weighted-sampler_0/checkpoints/checkpoint_best_47.pth
+      - projects/ted_classification/dinov3_huge_448x896_lora_r8a16_d01_dp01_f1_aug_v3_double_weighted-sampler_0/checkpoints/checkpoint_best_70.pth
+      - projects/ted_classification/dinov3_huge_448x896_lora_r8a16_d01_dp01_f1_aug_v3_double_weighted-sampler_0/checkpoints/checkpoint_best_36.pth
+      - projects/ted_classification/dinov3_huge_448x896_lora_r8a16_d01_dp01_f1_aug_v3_double_weighted-sampler_0/checkpoints/checkpoint_best_30.pth
+      - projects/ted_classification/dinov3_huge_448x896_lora_r8a16_d01_dp01_f1_aug_v3_double_weighted-sampler_0/checkpoints/checkpoint_best_83.pth

@@ -1,0 +1,35 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.ipynb_checkpoints/
+
+# Patient data (NOT to be committed — see README "Data" section)
+*.csv
+!requirements.txt
+
+# Model weights / checkpoints
+*.pth
+*.pt
+*.ckpt
+checkpoints/
+
+# Runtime output + local data area (created on train/eval; result_root_path / csv_path)
+projects/
+
+# Run outputs (logs, predictions, figures)
+log/
+val/
+test/
+vis_kp/
+explainability/
+uncertainty*/
+*.png
+*.jpg
+*.jpeg
+*.JPG
+*.JPEG
+*.zip
+
+# Misc
+.DS_Store

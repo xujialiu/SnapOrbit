@@ -1,0 +1,116 @@
+# Classification - Single-Scale ViT
+# Usage: python train_classification.py -c projects/ted_v2/dinov3_huge_448x896_lora_r32a64_d03_dp01_ep100_f1_aug_v2.yaml
+#
+# v6 vs v4b: extend training budget
+#   epochs:        50 -> 100   (cosine decay auto-redistributes over new horizon)
+#   warmup_epochs: 5  -> 10    (keep ~10% warmup; ramps lr more gently for longer run)
+#   everything else: same as v4b (LoRA r32a64 d0.1, drop_path 0.1, aug v3)
+
+# Training
+training:
+  batch_size: 16
+  epochs: 100   # was 50
+  accum_iter: 1
+  seed: 1
+  num_workers: 8
+  pin_mem: true
+  start_epoch: 0
+  num_iterations: null  # iterations per epoch (null = full dataset)
+
+# Loss
+loss:
+  module: loss.classification.cross_entropy
+  weight: false
+
+# Model
+model:
+  module: models.model_vit
+  name: dinov3_huge_plus  # format: backbone_size (dinov3, dinov2, retfound, visionfm)
+  input_size: [448, 896]
+  drop_rate: 0.0
+  drop_path_rate: 0.1
+  enable_fulltune: false
+  enable_lora: true
+  pretrained_ckpt: null  # local checkpoint path for retfound/visionfm
+  enable_last_vit: false
+
+  lora:
+    rank: 8
+    alpha: 16
+    dropout: 0.1
+    bias: lora_only
+
+  last_vit:
+    top_k: 196
+    sigma: 10.0
+    eps: 1.0e-06
+    score_variant: code
+
+# Optimizer
+optimizer:
+  lr: null
+  blr: 1e-3
+  weight_decay: 0.05
+  layer_decay: 0.75
+  min_lr: 1e-6
+  warmup_epochs: 10   # was 5
+  clip_grad: null
+  use_llrd: false
+  scheduler: cosine
+
+# Dataset
+dataset:
+  module: datasets.classification.dataset_with_keypoints
+  csv_path: /data_B/xujialiu/projects/super-resolution-classification/projects/ted_classification/data_splited.csv
+  image_path: /data_B/xujialiu/datasets/ted/
+  keypoint_x_col: keypoint_x
+  keypoint_y_col: keypoint_y
+  name_col: relative_path
+  split_col: fold
+  split_values:
+    train: [0, 4, 5, 6, 7, 8, 9]
+    val: [1]
+    test: [2, 3]
+  nb_classes: 3
+  target_cols: label
+  train_all: false
+  use_weighted_sampler: true
+
+# Augmentation (v2 — kept)
+augmentation:
+  module: augmentations.augmentation_with_keypoints
+  image_size: [448, 896]
+  mean: [0.485, 0.456, 0.406]
+  std: [0.229, 0.224, 0.225]
+  crop_padding_ratio: 0.0001
+  rotate_limit: 15
+  val_crop_ratio: 0.05
+  crop_aspect_ratio: [0.8, 1.2]
+  keypoint_jitter_std: 1.0
+
+# Paths
+paths:
+  checkpoint_dir: checkpoints
+  log_dir: log
+  val_dir: val
+  test_dir: test
+  result_root_path: projects/ted_classification
+  result_name: dinov3_huge_448x896_lora_r8a16_d01_dp01_f1_aug_v3_double_weighted-sampler_1
+  ckpt_path: null
+
+# Early stopping
+early_stopping:
+  patience: 0
+  monitor_metrics: val_loss
+  monitor_mode: min
+
+# Checkpoint saving
+checkpoint:
+  save_best_ckpt: 30   # Max best checkpoints to keep (<= 0 = disable)
+  save_epoch_ckpt: 0  # Max epoch checkpoints to keep (<= 0 = disable)
+  monitor_metrics: val_f1_macro
+  monitor_mode: max
+
+# Runtime
+eval: false
+device: "cuda:0"

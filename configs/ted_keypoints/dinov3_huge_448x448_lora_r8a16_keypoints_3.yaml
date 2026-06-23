@@ -1,0 +1,122 @@
+# TED 4-keypoint (canthus) detection — DINOv3 Huge+ @ 448x448 with LoRA.
+#
+# Predicts the 4 canthus landmarks per full-face image, in fixed x-sorted slots:
+#   (x1,y1)=OD outer  (x2,y2)=OD inner  (x3,y3)=OS inner  (x4,y4)=OS outer
+# Head width is auto-set to 2*len(target_cols)=8 by train_keypoints.py.
+#
+# Data prep (run once to create dataset.csv_path):
+#   conda run -n dinov3 python data_ted/codes/make_keypoints_csv.py
+#
+# Train:
+#   CUDA_VISIBLE_DEVICES=0 conda run -n dinov3 python train_keypoints.py \
+#     -c configs/ted_keypoints/dinov3_huge_448x448_lora_r8a16_keypoints_3.yaml
+#
+# Eval (set paths.ckpt_path):
+#   conda run -n dinov3 python train_keypoints.py \
+#     -c configs/ted_keypoints/dinov3_huge_448x448_lora_r8a16_keypoints_3.yaml --eval \
+#     paths.ckpt_path=<checkpoint.pth>
+
+# Training
+training:
+  batch_size: 8
+  epochs: 50
+  accum_iter: 1
+  seed: 1
+  num_workers: 8
+  pin_mem: true
+  num_iterations: null  # iterations per epoch (null = full dataset)
+
+# Loss
+loss:
+  module: loss.keypoints.mse  # masked MSE (ignores NaN / out-of-frame keypoints)
+
+# Model
+model:
+  module: models.model_vit
+  name: dinov3_huge_plus  # <backbone>_<size>; -> vit_huge_plus_patch16_dinov3.lvd1689m
+  input_size: [448, 448]
+  drop_rate: 0.0
+  drop_path_rate: 0.1
+  enable_fulltune: false
+  enable_lora: true
+  pretrained_ckpt: null
+
+  lora:
+    rank: 8
+    alpha: 16
+    dropout: 0.1
+    bias: lora_only
+
+# Optimizer
+optimizer:
+  lr: null          # auto: blr * eff_batch / 256 when null
+  blr: 1e-3
+  weight_decay: 0.05
+  layer_decay: 0.75
+  min_lr: 1e-6
+  warmup_epochs: 5
+  clip_grad: null
+  use_llrd: true
+  scheduler: cosine   # "cosine" | "plateau"
+
+# Dataset
+dataset:
+  module: datasets.keypoints.dataset
+  csv_path: projects/ted_keypoints/data_keypoints.csv  # produced by make_keypoints_csv.py
+  data_path: /data_B/xujialiu/datasets/ted/
+  image_col: relative_path
+  split_col: fold
+  split_values:
+    train: [0, 1, 2, 3, 4, 8, 9]
+    val: [5]
+    test: [6, 7]
+  target_cols: [[x1, y1], [x2, y2], [x3, y3], [x4, y4]]  # 4 keypoints, normalized 0-1
+  train_all: false
+
+# Augmentation
+augmentation:
+  module: augmentations.keypoints.augmentation_ted  # flip-FREE (fixed slot semantics)
+  image_size: [448, 448]
+  mean: [0.485, 0.456, 0.406]
+  std: [0.229, 0.224, 0.225]
+  rotate_limit: 15
+  # keypoint-safe crop: keypoint keeps a random fraction f~U(min,max) of its margin to
+  # each edge. f=1.0 -> no crop on that side; f=min -> most aggressive crop. All 4 points
+  # are ALWAYS kept in frame (crop box always encloses the keypoint bounding-box).
+  crop_scale_min: 0.1
+  crop_scale_max: 1.0
+  # aspect_ratio: up-front random horizontal stretch/compress of the whole image (and
+  # keypoints), factor ~ U(min, max) on width/height (>1 wider/flatter, <1 narrower/
+  # taller). Applied BEFORE rotate; the crop is then forced square (adds no distortion).
+  aspect_ratio: [0.5, 1.5]
+
+# Evaluation
+evaluation:
+  pck_thresholds: [0.05, 0.10, 0.20]   # only for the PCK printout / metrics.csv
+
+# Paths
+paths:
+  checkpoint_dir: checkpoints
+  log_dir: log
+  val_dir: val
+  test_dir: test
+  result_root_path: projects/ted_keypoints
+  result_name: dinov3_huge_448x448_lora_r8a16_keypoints_3
+  ckpt_path: null
+
+# Early stopping
+early_stopping:
+  patience: 0
+  monitor_metrics: val_mse
+  monitor_mode: min
+
+# Checkpoint saving
+checkpoint:
+  save_best_ckpt: 5
+  save_epoch_ckpt: 0
+  monitor_metrics: val_mse   # keep checkpoints with the LOWEST val MSE
+  monitor_mode: min
+
+# Runtime
+eval: false
+device: "cuda:0"

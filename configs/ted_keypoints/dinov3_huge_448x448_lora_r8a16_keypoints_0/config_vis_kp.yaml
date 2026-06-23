@@ -1,0 +1,114 @@
+training:
+  batch_size: 8
+  epochs: 50
+  accum_iter: 1
+  seed: 1
+  num_workers: 8
+  pin_mem: true
+  num_iterations: null
+loss:
+  module: loss.keypoints.mse
+model:
+  module: models.model_vit
+  name: dinov3_huge_plus
+  input_size:
+  - 448
+  - 448
+  drop_rate: 0.0
+  drop_path_rate: 0.1
+  enable_fulltune: false
+  enable_lora: true
+  pretrained_ckpt: null
+  lora:
+    rank: 8
+    alpha: 16
+    dropout: 0.1
+    bias: lora_only
+optimizer:
+  lr: null
+  blr: 0.001
+  weight_decay: 0.05
+  layer_decay: 0.75
+  min_lr: 1.0e-06
+  warmup_epochs: 5
+  clip_grad: null
+  use_llrd: true
+  scheduler: cosine
+dataset:
+  module: datasets.keypoints.dataset
+  csv_path: projects/ted_keypoints/data_keypoints.csv
+  data_path: /data_B/xujialiu/datasets/ted/
+  image_col: relative_path
+  split_col: fold
+  split_values:
+    train:
+    - 2
+    - 3
+    - 4
+    - 5
+    - 6
+    - 7
+    - 8
+    val:
+    - 9
+    test:
+    - 0
+    - 1
+  target_cols:
+  - - x1
+    - y1
+  - - x2
+    - y2
+  - - x3
+    - y3
+  - - x4
+    - y4
+  train_all: false
+  nb_classes: 8
+augmentation:
+  module: augmentations.keypoints.augmentation_ted
+  image_size:
+  - 448
+  - 448
+  mean:
+  - 0.485
+  - 0.456
+  - 0.406
+  std:
+  - 0.229
+  - 0.224
+  - 0.225
+  rotate_limit: 15
+  crop_scale_min: 0.1
+  crop_scale_max: 1.0
+  aspect_ratio:
+  - 0.5
+  - 1.5
+evaluation:
+  pck_thresholds:
+  - 0.05
+  - 0.1
+  - 0.2
+paths:
+  checkpoint_dir: checkpoints
+  log_dir: log
+  val_dir: val
+  test_dir: test
+  result_root_path: projects/ted_keypoints
+  result_name: dinov3_huge_448x448_lora_r8a16_keypoints_0
+  ckpt_path: projects/ted_keypoints/dinov3_huge_448x448_lora_r8a16_keypoints_0/checkpoints/checkpoint_best_41.pth
+  vis_path: vis_kp
+early_stopping:
+  patience: 0
+  monitor_metrics: val_mse
+  monitor_mode: min
+checkpoint:
+  save_best_ckpt: 5
+  save_epoch_ckpt: 0
+  monitor_metrics: val_mse
+  monitor_mode: min
+eval: false
+device: cuda:0
+visualization:
+  split: test
+  draw_gt: true

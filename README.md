@@ -80,3 +80,7 @@ r8/α16, unilateral r32/α64, dropout 0.1); input 448×896 / 448×448;
 cross-entropy with a class-weighted sampler; base LR 1e-3, weight decay 0.05,
 100 epochs (cosine + 10-epoch warmup), mixed precision. See `configs/` for the
 exact per-experiment hyperparameters.
+
+## License
+
+Released under the [MIT License](LICENSE).

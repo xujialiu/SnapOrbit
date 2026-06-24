@@ -70,3 +70,7 @@ data_ted/codes/   数据准备与绘图      visualization/   关键点叠加可
 DINOv3-Huge+ 骨干,LoRA 注入注意力 QKV 投影(双眼 r8/α16,单眼 r32/α64,dropout
 0.1);输入 448×896 / 448×448;交叉熵 + 类别加权采样器;base LR 1e-3、weight decay
 0.05、100 epochs(cosine + 10 轮 warmup)、混合精度。各实验的具体超参见 `configs/`。
+
+## 许可证
+
+基于 [MIT License](LICENSE) 发布。

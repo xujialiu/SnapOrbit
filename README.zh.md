@@ -1,8 +1,7 @@
-# TED-SOLs-DL
+# SnapOrbit
 
-论文 *"An Uncertainty-Aware Deep Learning Framework for Differentiating Thyroid
-Eye Disease and Space-Occupying Lesions Using Smartphone-Captured External
-Photographs"* 的代码。
+论文 *"Uncertainty-Aware Deep Learning Framework for Orbital Disease Triage
+Using Smartphone-Captured Images: A Prospective Study"* 的代码。
 
 [English](README.md) | [中文](README.zh.md)
 

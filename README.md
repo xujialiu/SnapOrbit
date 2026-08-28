@@ -66,10 +66,24 @@ python explainability_classification.py -c configs/ted_classification/<run>/conf
 ## Layout
 
 ```
-train_{classification,keypoints}.py   entry points (+ engine_*, uncertainty_*, explainability_*)
-models/ datasets/ augmentations/ loss/ util/   framework code
-configs/{ted_classification,ted_keypoints}/    configs + run scripts
-data_ted/codes/   data prep & figures      visualization/   keypoint overlays
+SnapOrbit/
+├── train_classification.py           # entry point: TED / SOLs / normal classifier
+├── train_keypoints.py                # entry point: canthal keypoint model
+├── engine_finetune_*.py              # train / eval loops for the two entry points
+├── uncertainty_classification.py     # uncertainty: snapshot_ensemble | mc_dropout | mc_dropout_snapshot_ensemble
+├── explainability_classification.py  # ViT attention maps
+├── mc_dropout.py                     # MCDropout wrapper used by the mc_dropout methods above
+├── models/                           # ViT backbone + LoRA wrapper
+├── datasets/                         # classification / keypoints datasets
+├── augmentations/                    # classification / keypoints augmentations
+├── loss/                             # cross-entropy (classification), MSE (keypoints)
+├── util/                             # config parsing, LR schedule, training utils
+├── configs/
+│   ├── ted_classification/           # classifier configs + script_*.sh (train / uncertainty / explainability / reader study)
+│   └── ted_keypoints/                # keypoint configs + script_*.sh (train / 5-fold / eval-vis)
+├── data_ted/codes/                   # data prep (make_keypoints_csv.py) & figure scripts
+├── visualization/                    # keypoint overlay visualization
+└── projects/                         # git-ignored: runtime outputs & local data
 ```
 
 ## Key settings

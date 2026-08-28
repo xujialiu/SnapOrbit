@@ -58,10 +58,24 @@ python explainability_classification.py -c configs/ted_classification/<run>/conf
 ## 目录
 
 ```
-train_{classification,keypoints}.py   入口(及 engine_*、uncertainty_*、explainability_*)
-models/ datasets/ augmentations/ loss/ util/   框架代码
-configs/{ted_classification,ted_keypoints}/    配置 + 运行脚本
-data_ted/codes/   数据准备与绘图      visualization/   关键点叠加可视化
+SnapOrbit/
+├── train_classification.py           # 入口:TED / SOLs / 正常 三分类器
+├── train_keypoints.py                # 入口:眦点关键点模型
+├── engine_finetune_*.py              # 上述两个入口的训练 / 评估循环
+├── uncertainty_classification.py     # 不确定性:snapshot_ensemble | mc_dropout | mc_dropout_snapshot_ensemble
+├── explainability_classification.py  # ViT 注意力图
+├── mc_dropout.py                     # MCDropout 封装,供上面的 mc_dropout 方法使用
+├── models/                           # ViT 骨干 + LoRA 封装
+├── datasets/                         # 分类 / 关键点数据集
+├── augmentations/                    # 分类 / 关键点数据增强
+├── loss/                             # 交叉熵(分类)、MSE(关键点)
+├── util/                             # 配置解析、学习率调度、训练工具
+├── configs/
+│   ├── ted_classification/           # 分类器配置 + script_*.sh(训练 / 不确定性 / 可解释性 / 读片研究)
+│   └── ted_keypoints/                # 关键点配置 + script_*.sh(训练 / 5 折 / 评估可视化)
+├── data_ted/codes/                   # 数据准备(make_keypoints_csv.py)与绘图脚本
+├── visualization/                    # 关键点叠加可视化
+└── projects/                         # git 忽略:运行时输出与本地数据
 ```
 
 ## 关键设置
